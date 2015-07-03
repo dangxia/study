@@ -13,9 +13,9 @@ import redis.clients.jedis.Response;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-public class RedisPipline {
+public class RedisPipeline {
 	private static final Logger LOG = LoggerFactory
-			.getLogger(RedisPipline.class);
+			.getLogger(RedisPipeline.class);
 
 	public static void ping(Jedis jedis) {
 		int i = 0;
