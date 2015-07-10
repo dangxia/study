@@ -4,3 +4,4 @@ target
 .settings
 tmp
 .directory
+_private
