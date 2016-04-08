@@ -4,12 +4,58 @@
 	<groupId>com.github.dangxia</groupId>
 	<artifactId>study-nio</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+		<hadoop.version>2.2.0</hadoop.version>
+		<hbase.version>0.98.12-hadoop2</hbase.version>
+		<phoenix.version>4.5.1-HBase-0.98</phoenix.version>
+		<mrunit.version>1.0.0</mrunit.version>
+
+		<kafka.versin>0.8.1.1</kafka.versin>
+		<storm.version>0.9.4</storm.version>
+
+		<spring.version>3.2.0.RELEASE</spring.version>
+		<avro.version>1.7.6</avro.version>
+
+
+
+		<slf4j.version>1.7.2</slf4j.version>
+		<log4j.version>1.2.16</log4j.version>
+		<junit.version>4.8.1</junit.version>
+		<mockito.version>1.9.5</mockito.version>
+		<aspectj.version>1.7.2</aspectj.version>
+
+
+		<jstorm.version>2.1.0</jstorm.version>
+		<jdk.version>1.7</jdk.version>
+		<maven.compiler.version>3.3</maven.compiler.version>
+
+		<project.version>2.0</project.version>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
 			<version>4.0.29.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>17.0</version>
 		</dependency>
 	</dependencies>
 </project>

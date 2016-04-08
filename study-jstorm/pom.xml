@@ -1,0 +1,40 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.github.dangxia</groupId>
+	<artifactId>study-jstorm</artifactId>
+	<version>1.0</version>
+
+	<properties>
+		<jstorm.version>2.1.0</jstorm.version>
+		<jdk.version>1.7</jdk.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>com.alibaba.jstorm</groupId>
+			<artifactId>jstorm-core</artifactId>
+			<version>${jstorm.version}</version>
+			<scope>provided</scope>
+			<!-- <exclusions>
+				<exclusion>
+					 too much auto complete 
+					<groupId>org.clojure</groupId>
+					<artifactId>clojure</artifactId>
+				</exclusion>
+			</exclusions> -->
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
