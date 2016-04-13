@@ -3,10 +3,10 @@ package com.github.dangxia.nio.telnet;
 import static com.github.dangxia.nio.telnet.Code.CTRL_C_BYTES;
 import static com.github.dangxia.nio.telnet.Code.EXIT_BYTES;
 import static com.github.dangxia.nio.telnet.Code.HEAD_SIZE;
+import static com.github.dangxia.nio.telnet.Code.SERVER_PORT;
 import static com.github.dangxia.nio.telnet.Code.SHUTDOWN_BYTES;
 import static java.nio.channels.SelectionKey.OP_ACCEPT;
 import static java.nio.channels.SelectionKey.OP_READ;
-import static java.nio.channels.SelectionKey.OP_WRITE;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -32,32 +32,28 @@ public class NioEchoServer {
 
 	public void start() throws IOException {
 		serverSocketChannel = ServerSocketChannel.open();
-		serverSocketChannel.socket().bind(new InetSocketAddress(9999));
+		serverSocketChannel.socket().bind(new InetSocketAddress(SERVER_PORT));
 		serverSocketChannel.configureBlocking(false);
 
 		serverSocketChannel.register(selector, OP_ACCEPT);
 
 		System.out.println("started");
 		while (!Thread.interrupted()) {
-			try {
-				int ready = selector.select(500);
-				if (ready > 0) {
-					Set<SelectionKey> keys = selector.selectedKeys();
-					Iterator<SelectionKey> iter = keys.iterator();
-					while (iter.hasNext()) {
-						SelectionKey key = iter.next();
-						iter.remove();
-						if (key.isAcceptable()) {
-							accept(key);
-						} else if (key.isWritable()) {
-							write(key);
-						} else if (key.isReadable()) {
-							read(key);
-						}
+			int ready = selector.select(500);
+			if (ready > 0) {
+				Set<SelectionKey> keys = selector.selectedKeys();
+				Iterator<SelectionKey> iter = keys.iterator();
+				while (iter.hasNext()) {
+					SelectionKey key = iter.next();
+					iter.remove();
+					if (key.isAcceptable()) {
+						accept(key);
+					} else if (key.isWritable()) {
+						write(key);
+					} else if (key.isReadable()) {
+						read(key);
 					}
 				}
-			} catch (Exception e) {
-				Throwables.propagate(e);
 			}
 		}
 		Set<SelectionKey> keys = selector.keys();
@@ -78,17 +74,16 @@ public class NioEchoServer {
 	}
 
 	private void write(SelectionKey key) throws IOException {
-		Reciever reciever = (Reciever) key.attachment();
+		NioEchoAttach reciever = (NioEchoAttach) key.attachment();
 		if (reciever != null) {
 			reciever.write();
 		}
 	}
 
 	private void read(SelectionKey key) throws IOException {
-		Reciever reciever = (Reciever) key.attachment();
+		NioEchoAttach reciever = (NioEchoAttach) key.attachment();
 		if (reciever == null) {
-			reciever = new Reciever(key);
-			key.attach(reciever);
+			reciever = new NioEchoAttach(key);
 		}
 
 		reciever.read();
@@ -106,71 +101,64 @@ public class NioEchoServer {
 		System.out.println("new conn registered");
 	}
 
-	private class Reciever {
-		private final SelectionKey key;
-		private final SocketChannel socketChannel;
-		private boolean alive = true;
-
+	private class NioEchoAttach extends ChannelAttach {
+		private int readTimes = 0;
 		private final ByteBuffer head = ByteBuffer.allocate(HEAD_SIZE);;
 		private ByteBuffer body;
 
-		private int readTimes = 0;
-
-		public Reciever(SelectionKey key) {
-			this.key = key;
-			this.socketChannel = (SocketChannel) key.channel();
+		public NioEchoAttach(SelectionKey key) {
+			super(key);
 		}
 
-		public void close() throws IOException {
-			alive = false;
-			key.cancel();
-			socketChannel.close();
-		}
-
-		private void read(ByteBuffer bb) throws IOException {
-			if (!alive) {
-				return;
+		@Override
+		protected int doWrite() throws IOException {
+			int write = socketChannel.write(body);
+			if (!body.hasRemaining()) {
+				disableWrite().enableRead();
 			}
-			int head = socketChannel.read(bb);
-			if (head == -1) {
-				close();
-			}
+			head.clear();
+			body = null;
+
+			LOG.info("write back size: {}", write);
+
+			return write;
 		}
 
-		public void read() throws IOException {
+		@Override
+		protected int doRead() throws IOException {
 			if (readTimes > 0) {
-				System.out.println("read multi times: " + readTimes);
+				LOG.info("read multi times: {}", readTimes);
 			}
 			readTimes++;
+			int headRead = 0;
 			if (head.hasRemaining()) {
-				read(head);
+				headRead = socketChannel.read(head);
+				if (headRead == -1) {
+					close();
+					return headRead;
+				}
 			}
-
+			int bodyRead = 0;
 			if (!head.hasRemaining()) {
 				if (body == null) {
 					head.flip();
 					body = ByteBuffer.allocate(head.getInt());
 				}
-
 				if (body.hasRemaining()) {
-					read(body);
+					bodyRead = socketChannel.read(body);
+					if (bodyRead == -1) {
+						close();
+						return bodyRead;
+					}
 				}
 
 				if (!body.hasRemaining()) {
 					readComplete();
 				}
 			}
-
-		}
-
-		public void write() throws IOException {
-			if (body != null) {
-				socketChannel.write(body);
-				key.interestOps(key.interestOps() & ~OP_WRITE | OP_READ);
-
-				head.clear();
-				body = null;
-			}
+			int size = bodyRead + headRead;
+			LOG.info("receive size: {}", size);
+			return size;
 		}
 
 		private void readComplete() throws IOException {
@@ -181,15 +169,15 @@ public class NioEchoServer {
 			body.get(bytes);
 			body.rewind();
 			if (Arrays.equals(bytes, CTRL_C_BYTES) || Arrays.equals(bytes, EXIT_BYTES)) {
-				key.cancel();
-				key.channel().close();
+				close();
 			} else if (Arrays.equals(bytes, SHUTDOWN_BYTES)) {
 				Thread.currentThread().interrupt();
 			} else {
-				System.out.print(new String(bytes));
-				key.interestOps(key.interestOps() & ~OP_READ | OP_WRITE);
+				LOG.info("receive {}", new String(bytes));
+				disableRead().enableWrite();
 			}
 		}
+
 	}
 
 }
