@@ -88,7 +88,6 @@ public class NioEchoClient {
 			queue = new LinkedBlockingQueue<>();
 			this.key = key;
 			startPushThread();
-
 		}
 
 		private void push() {

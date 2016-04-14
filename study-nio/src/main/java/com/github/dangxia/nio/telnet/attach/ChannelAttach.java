@@ -1,4 +1,4 @@
-package com.github.dangxia.nio.telnet;
+package com.github.dangxia.nio.telnet.attach;
 
 import static java.nio.channels.SelectionKey.OP_READ;
 import static java.nio.channels.SelectionKey.OP_WRITE;
@@ -25,6 +25,19 @@ public abstract class ChannelAttach {
 	protected abstract int doRead() throws IOException;
 
 	protected abstract int doWrite() throws IOException;
+
+	protected void doFinishConnect() throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	public void finishConnect() throws IOException {
+		try {
+			doFinishConnect();
+		} catch (IOException e) {
+			LOG.warn("chanell finishConnect failed", e);
+			close();
+		}
+	}
 
 	public int write() {
 		try {

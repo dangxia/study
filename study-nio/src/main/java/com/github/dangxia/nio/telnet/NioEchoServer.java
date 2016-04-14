@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.github.dangxia.nio.telnet.attach.ChannelAttach;
 import com.google.common.base.Throwables;
 
 public class NioEchoServer {
@@ -126,10 +127,10 @@ public class NioEchoServer {
 
 		@Override
 		protected int doRead() throws IOException {
+			readTimes++;
 			if (readTimes > 0) {
 				LOG.info("read multi times: {}", readTimes);
 			}
-			readTimes++;
 			int headRead = 0;
 			if (head.hasRemaining()) {
 				headRead = socketChannel.read(head);
