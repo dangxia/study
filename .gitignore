@@ -5,3 +5,5 @@ target
 tmp
 .directory
 _private
+.idea
+*.iml
