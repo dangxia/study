@@ -85,7 +85,7 @@ public class NioEchoClient {
 
 		public DataHolder(Splitor splitor, SelectionKey key) {
 			data = splitor.split(playload);
-			queue = new LinkedBlockingQueue<>();
+			queue = new LinkedBlockingQueue<byte[]>();
 			this.key = key;
 			startPushThread();
 		}

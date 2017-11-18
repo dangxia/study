@@ -39,7 +39,7 @@ public class ProxyAttach {
 		this.header = ByteBuffer.allocate(HEAD_SIZE);
 		this.bb = ByteBuffer.allocate(PROXY_BUFFER);
 		this.telnetOut = ByteBuffer.allocate(PROXY_BUFFER);
-		this.queue = new LinkedBlockingQueue<>();
+		this.queue = new LinkedBlockingQueue<byte[]>();
 	}
 
 	public ClientAttach getClientAttach() {
